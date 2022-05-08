@@ -27,3 +27,32 @@ TEST(UniquePtrTest, MoveAssignmentOperator)
     EXPECT_EQ(1, *ptr2);
     EXPECT_EQ(nullptr, ptr1.get());
 }
+
+TEST(UniquePtrTest, boolOperator)
+{
+    UniquePtr<int> ptr1(new int(1));
+    EXPECT_TRUE(ptr1);
+    UniquePtr<int> ptr2(nullptr);
+    EXPECT_FALSE(ptr2);
+}
+
+TEST(UniquePtrTest, release)
+{
+    UniquePtr<int> ptr1(new int(1));
+    EXPECT_EQ(1, *ptr1);
+    auto rawPtr = ptr1.release();
+    EXPECT_EQ(1, *rawPtr);
+    EXPECT_FALSE(ptr1);
+}
+
+TEST(UniquePtrTest, reset)
+{
+    UniquePtr<int> ptr1(new int(1));
+    EXPECT_EQ(1, *ptr1);
+
+    ptr1.reset(new int(2));
+    EXPECT_EQ(2, *ptr1);
+
+    ptr1.reset();
+    EXPECT_EQ(2, *ptr1);
+}
