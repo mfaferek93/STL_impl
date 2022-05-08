@@ -2,7 +2,7 @@
 
 #include "UniquePtr.h"
 
-#include <utility>
+#include <utility> // move
 
 TEST(UniquePtrTest, Constructors)
 {
@@ -55,4 +55,27 @@ TEST(UniquePtrTest, reset)
 
     ptr1.reset();
     EXPECT_EQ(2, *ptr1);
+}
+
+class TestDefaultDeleter
+{
+public:
+    void operator()(int*& res)
+    {
+        delete res;
+        res = nullptr;
+        ++m_callsCounter;
+    }
+
+    static int m_callsCounter;
+};
+
+int TestDefaultDeleter::m_callsCounter = 0;
+TEST(UniquePtrTest, customDeleter)
+{
+    EXPECT_EQ(0, TestDefaultDeleter::m_callsCounter);
+    UniquePtr<int, TestDefaultDeleter> ptr1(new int(1));
+    ptr1.~UniquePtr();
+    EXPECT_FALSE(ptr1);
+    EXPECT_EQ(1, TestDefaultDeleter::m_callsCounter);
 }

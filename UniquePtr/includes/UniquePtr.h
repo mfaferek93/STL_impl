@@ -3,7 +3,18 @@
 
 #include <utility> // exchange
 
-template<typename T>
+template <typename T>
+class DefaultDeleter
+{
+public:
+    void operator()(T*& res)
+    {
+        delete res;
+        res = nullptr;
+    }
+};
+
+template<typename T, typename Deleter = DefaultDeleter<T>>
 class UniquePtr
 {
 public:
@@ -21,7 +32,7 @@ public:
     {
         if (m_ptr == rhs.m_ptr) return *this;
 
-        delete m_ptr;
+        m_deleter(m_ptr);
         m_ptr = rhs.m_ptr;
         rhs.m_ptr = nullptr;
 
@@ -29,7 +40,7 @@ public:
     }
     ~UniquePtr() noexcept
     {
-        delete m_ptr;
+        m_deleter(m_ptr);
     }
 
     T* operator->() const noexcept
@@ -40,7 +51,6 @@ public:
     {
         return *m_ptr;
     }
-
     explicit operator bool() const noexcept
     {
         return m_ptr;
@@ -59,13 +69,14 @@ public:
     {
         if (!newPtr) return;
 
-        delete m_ptr;
+        m_deleter(m_ptr);
         m_ptr = newPtr;
         newPtr = nullptr;
     }
 
 private:
     T* m_ptr;
+    Deleter m_deleter;
 };
 
 #endif
