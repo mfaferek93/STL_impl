@@ -2,6 +2,7 @@
 
 #include "UniquePtr.h"
 
+#include <functional> // function
 #include <utility> // move
 
 TEST(UniquePtrTest, Constructors)
@@ -73,9 +74,28 @@ public:
 int TestDefaultDeleter::m_callsCounter = 0;
 TEST(UniquePtrTest, customDeleter)
 {
+    // function class operator as deleter
     EXPECT_EQ(0, TestDefaultDeleter::m_callsCounter);
-    UniquePtr<int, TestDefaultDeleter> ptr1(new int(1));
+    UniquePtr<int, TestDefaultDeleter> ptr1(new int(1), TestDefaultDeleter{});
     ptr1.~UniquePtr();
     EXPECT_FALSE(ptr1);
     EXPECT_EQ(1, TestDefaultDeleter::m_callsCounter);
+
+    // lambda function as deleter
+    int lambdaCallsCounter = 0;
+    auto lambdaDeleter = [&lambdaCallsCounter](int*& ptr)
+    {
+        delete ptr;
+        ptr = nullptr;
+        ++lambdaCallsCounter;
+    };
+    UniquePtr<int, decltype(lambdaDeleter)> ptr2(new int(2), lambdaDeleter);
+    ptr2.~UniquePtr();
+    EXPECT_EQ(1, lambdaCallsCounter);
+
+    // std::function as deleter
+    std::function<void(int*&)> funcDeleter = lambdaDeleter;
+    UniquePtr<int, decltype(funcDeleter)> ptr3(new int(2), funcDeleter);
+    ptr3.~UniquePtr();
+    EXPECT_EQ(2, lambdaCallsCounter);
 }

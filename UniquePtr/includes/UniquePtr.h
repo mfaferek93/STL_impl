@@ -1,7 +1,7 @@
 #ifndef UNIQUE_PTR
 #define UNIQUE_PTR
 
-#include <utility> // exchange
+#include <utility> // exchange, swap
 
 template <typename T>
 class DefaultDeleter
@@ -18,8 +18,9 @@ template<typename T, typename Deleter = DefaultDeleter<T>>
 class UniquePtr
 {
 public:
-    explicit UniquePtr(T* ptr = nullptr) noexcept
+    explicit UniquePtr(T* ptr = nullptr, Deleter deleter = DefaultDeleter<T>{}) noexcept
     : m_ptr(ptr)
+    , m_deleter(deleter)
     {}
     UniquePtr(const UniquePtr& rhs) = delete;
     UniquePtr(UniquePtr&& rhs)
@@ -33,8 +34,7 @@ public:
         if (m_ptr == rhs.m_ptr) return *this;
 
         m_deleter(m_ptr);
-        m_ptr = rhs.m_ptr;
-        rhs.m_ptr = nullptr;
+        std::swap(m_ptr, rhs.m_ptr);
 
         return *this;
     }
@@ -70,8 +70,7 @@ public:
         if (!newPtr) return;
 
         m_deleter(m_ptr);
-        m_ptr = newPtr;
-        newPtr = nullptr;
+        std::swap(m_ptr, newPtr);
     }
 
 private:
