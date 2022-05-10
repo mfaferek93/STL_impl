@@ -14,31 +14,33 @@ public:
     }
 };
 
-template<typename T, typename Deleter = DefaultDeleter<T>>
-class UniquePtr
+template <typename T>
+class DefaultDeleter<T[]>
 {
 public:
-    explicit UniquePtr(T* ptr = nullptr, Deleter deleter = DefaultDeleter<T>{}) noexcept
+    void operator()(T*& res)
+    {
+        delete[] res;
+        res = nullptr;
+    }
+};
+
+template<typename T, typename Deleter = DefaultDeleter<T>>
+class BaseUniquePtr
+{
+public:
+    explicit BaseUniquePtr(T* ptr, Deleter deleter) noexcept
     : m_ptr(ptr)
     , m_deleter(deleter)
     {}
-    UniquePtr(const UniquePtr& rhs) = delete;
-    UniquePtr(UniquePtr&& rhs)
+    BaseUniquePtr(const BaseUniquePtr& rhs) = delete;
+    BaseUniquePtr(BaseUniquePtr&& rhs)
     : m_ptr(rhs.m_ptr)
     {
         rhs.m_ptr = nullptr;
     }
-    UniquePtr& operator=(const UniquePtr& rhs) = delete;
-    UniquePtr& operator=(UniquePtr&& rhs) noexcept
-    {
-        if (m_ptr == rhs.m_ptr) return *this;
-
-        m_deleter(m_ptr);
-        std::swap(m_ptr, rhs.m_ptr);
-
-        return *this;
-    }
-    ~UniquePtr() noexcept
+    BaseUniquePtr& operator=(const BaseUniquePtr& rhs) = delete;
+    virtual ~BaseUniquePtr() noexcept
     {
         m_deleter(m_ptr);
     }
@@ -67,15 +69,58 @@ public:
 
     void reset(T* newPtr = nullptr) noexcept
     {
-        if (!newPtr) return;
-
         m_deleter(m_ptr);
         std::swap(m_ptr, newPtr);
     }
 
-private:
+protected:
     T* m_ptr;
     Deleter m_deleter;
+};
+
+template<typename T, typename Deleter = DefaultDeleter<T>>
+class UniquePtr : public BaseUniquePtr<T, Deleter>
+{
+public:
+    explicit UniquePtr(T* ptr = nullptr, Deleter deleter = DefaultDeleter<T>{}) noexcept
+    : BaseUniquePtr<T, Deleter>(ptr, deleter)
+    {}
+    UniquePtr(UniquePtr&& rhs)
+    : BaseUniquePtr<T, Deleter>(std::move(rhs))
+    {
+    }
+    UniquePtr& operator=(UniquePtr&& rhs) noexcept
+    {
+        if (this->m_ptr == rhs.m_ptr) return *this;
+
+        this->m_deleter(this->m_ptr);
+        std::swap(this->m_ptr, rhs.m_ptr);
+
+        return *this;
+    }
+};
+
+template<typename T, typename Deleter>
+class UniquePtr<T[], Deleter> : public BaseUniquePtr<T, Deleter>
+{
+    public:
+    explicit UniquePtr(T* ptr = nullptr, Deleter deleter = DefaultDeleter<T[]>{}) noexcept
+    : BaseUniquePtr<T, Deleter>(ptr, deleter)
+    {
+    }
+    UniquePtr(UniquePtr&& rhs)
+    : BaseUniquePtr<T, Deleter>(std::move(rhs))
+    {
+    }
+    UniquePtr& operator=(UniquePtr&& rhs) noexcept
+    {
+        if (this->m_ptr == rhs.m_ptr) return *this;
+
+        this->m_deleter(this->m_ptr);
+        std::swap(this->m_ptr, rhs.m_ptr);
+
+        return *this;
+    }
 };
 
 #endif

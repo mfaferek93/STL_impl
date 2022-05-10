@@ -2,6 +2,7 @@
 
 #include "UniquePtr.h"
 
+#include <cstddef> // size_t
 #include <functional> // function
 #include <utility> // move
 
@@ -55,7 +56,7 @@ TEST(UniquePtrTest, reset)
     EXPECT_EQ(2, *ptr1);
 
     ptr1.reset();
-    EXPECT_EQ(2, *ptr1);
+    EXPECT_EQ(nullptr, ptr1.get());
 }
 
 class TestDefaultDeleter
@@ -98,4 +99,23 @@ TEST(UniquePtrTest, customDeleter)
     UniquePtr<int, decltype(funcDeleter)> ptr3(new int(2), funcDeleter);
     ptr3.~UniquePtr();
     EXPECT_EQ(2, lambdaCallsCounter);
+}
+
+TEST(UniquePtrTest, arrayPartialSpecialization)
+{
+    const size_t arraySize = 5;
+    UniquePtr<int[]> ptr1(new int[arraySize]());
+    auto* arrayPtr = ptr1.get();
+    for (size_t i = 0; i < arraySize; ++i)
+    {
+        arrayPtr[i] = i;
+    }
+
+    for (size_t i = 0; i < arraySize; ++i)
+    {
+        EXPECT_EQ(i, ptr1.get()[i]);
+    }
+
+    ptr1.reset();
+    EXPECT_EQ(nullptr, ptr1.get());
 }
