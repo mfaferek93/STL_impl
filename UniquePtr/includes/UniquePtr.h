@@ -1,6 +1,7 @@
 #ifndef UNIQUE_PTR
 #define UNIQUE_PTR
 
+#include <cstddef> // nullptr_t
 #include <utility> // exchange, swap
 
 template <typename T>
@@ -100,6 +101,33 @@ public:
     }
 };
 
+template<typename T1, typename T2, typename D1, typename D2>
+bool operator==(const UniquePtr<T1, D1>& lhsPtr, const UniquePtr<T2, D2>& rhsPtr)
+{
+    if (!lhsPtr && !rhsPtr) return true;
+    else if(!lhsPtr || !rhsPtr) return false;
+
+    return ((*lhsPtr) == (*rhsPtr));
+}
+
+template<typename T1, typename D1>
+bool operator==(const UniquePtr<T1, D1>& lhsPtr, std::nullptr_t)
+{
+    return !lhsPtr;
+}
+
+template<typename T1, typename D1>
+bool operator==(std::nullptr_t, const UniquePtr<T1, D1>& rhsPtr)
+{
+    return !rhsPtr;
+}
+
+template<typename T1, typename T2>
+bool operator!=(const T1& lhsPtr, const T2& rhsPtr)
+{
+    return !operator==(lhsPtr, rhsPtr);
+}
+
 template<typename T, typename Deleter>
 class UniquePtr<T[], Deleter> : public BaseUniquePtr<T, Deleter>
 {
@@ -122,5 +150,20 @@ class UniquePtr<T[], Deleter> : public BaseUniquePtr<T, Deleter>
         return *this;
     }
 };
+
+template<typename T1, typename T2, typename D1, typename D2>
+bool operator==(const UniquePtr<T1[], D1>& lhsPtr, const UniquePtr<T2[], D2>& rhsPtr) = delete;
+
+template<typename T1, typename D1>
+bool operator==(const UniquePtr<T1[], D1>& lhsPtr, std::nullptr_t)
+{
+    return !lhsPtr;
+}
+
+template<typename T1, typename D1>
+bool operator==(std::nullptr_t, const UniquePtr<T1[], D1>& rhsPtr)
+{
+    return !rhsPtr;
+}
 
 #endif

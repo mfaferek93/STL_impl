@@ -119,3 +119,35 @@ TEST(UniquePtrTest, arrayPartialSpecialization)
     ptr1.reset();
     EXPECT_EQ(nullptr, ptr1.get());
 }
+
+TEST(UniquePtrTest, equalityOperators)
+{
+    UniquePtr<int> ptr1(new int(1));
+    UniquePtr<int> ptr2(new int(1));
+    EXPECT_TRUE(ptr1 == ptr2);
+    EXPECT_FALSE(ptr1 != ptr2);
+
+    EXPECT_FALSE(ptr2 == UniquePtr<int>{nullptr});
+    EXPECT_TRUE(ptr2 != UniquePtr<int>{nullptr});
+
+    UniquePtr<int> ptr3(std::move(ptr2));
+    EXPECT_FALSE(ptr2 == ptr3);
+    EXPECT_TRUE(ptr2 != ptr3);
+
+    UniquePtr<int> ptr4(new int(4));
+    EXPECT_FALSE(ptr4 == ptr1);
+    EXPECT_TRUE(ptr4 != ptr1);
+
+    EXPECT_FALSE(ptr4 == nullptr);
+    EXPECT_TRUE(ptr4 != nullptr);
+
+    EXPECT_FALSE(nullptr == ptr4);
+    EXPECT_TRUE(nullptr != ptr4);
+
+    const size_t arraySize = 5;
+    UniquePtr<int[]> ptr5(new int[arraySize]());
+    EXPECT_FALSE(ptr5 == nullptr);
+    EXPECT_TRUE(ptr5 != nullptr);
+    EXPECT_FALSE(nullptr == ptr5);
+    EXPECT_TRUE(nullptr != ptr5);
+}
