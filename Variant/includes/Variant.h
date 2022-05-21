@@ -61,7 +61,7 @@ public:
     }
 
     template <typename T>
-    T &get()
+    T &Get()
     {
         if (m_typeId == typeid(T))
         {
@@ -73,13 +73,19 @@ public:
         }
     }
 
-    template <typename T, typename ... Args>
-    T& emplace(Args&& ... args)
+    template <typename T, typename... Args>
+    T &Emplace(Args &&...args)
     {
         Deleter<Ts...>::Destroy(m_typeId, m_data);
-        new(&m_data) T(std::forward<Args>(args)...);
+        new (&m_data) T(std::forward<Args>(args)...);
         m_typeId = typeid(T);
-        return *reinterpret_cast<T*>(m_data);
+        return *reinterpret_cast<T *>(m_data);
+    }
+
+    template <typename T>
+    bool HoldsAlternative()
+    {
+        return (m_typeId == typeid(T));
     }
 
     ~Variant()
