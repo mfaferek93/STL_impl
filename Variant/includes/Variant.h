@@ -73,6 +73,15 @@ public:
         }
     }
 
+    template <typename T, typename ... Args>
+    T& emplace(Args&& ... args)
+    {
+        Deleter<Ts...>::Destroy(m_typeId, m_data);
+        new(&m_data) T(std::forward<Args>(args)...);
+        m_typeId = typeid(T);
+        return *reinterpret_cast<T*>(m_data);
+    }
+
     ~Variant()
     {
         Deleter<Ts...>::Destroy(m_typeId, m_data);
