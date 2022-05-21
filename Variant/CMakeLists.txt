@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(TypeTraits)
+project(Variant)
 
 include(FetchContent)
 
@@ -21,8 +21,8 @@ endif()
 enable_testing()
 
 add_executable(
-  TypeTraitsTest
-  tests/TypeTraitsTest.cpp
+  VariantTest
+  tests/VariantTest.cpp
 )
-target_include_directories(TypeTraitsTest PRIVATE includes)
-target_link_libraries(TypeTraitsTest gtest gmock gtest_main)
+target_include_directories(VariantTest PRIVATE includes)
+target_link_libraries(VariantTest gtest gmock gtest_main)
