@@ -93,9 +93,29 @@ public:
         Deleter<Ts...>::Destroy(m_typeId, m_data);
     }
 
+    template <typename F, typename... T>
+    friend void Visit(F &&f, Variant<T...> v);
+
 private:
     std::type_index m_typeId;
     char m_data[m_maxSize];
+
+    template <typename T, typename U, typename... Types>
+    T &Get()
+    {
+        if (m_typeId != typeid(T))
+        {
+            Get<U, Types...>();
+        }
+
+        return *reinterpret_cast<T *>(m_data);
+    }
 };
+
+template <typename F, typename... T>
+void Visit(F &&f, Variant<T...> v)
+{
+    f(v.template Get<T...>());
+}
 
 #endif

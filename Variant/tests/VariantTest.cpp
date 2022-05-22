@@ -2,6 +2,8 @@
 
 #include "Variant.h"
 
+#include <type_traits>
+
 TEST(VariantTest, getMethod)
 {
     Variant<int, float, bool, char, double> v(5);
@@ -55,4 +57,28 @@ TEST(VariantTest, holdsAlternative)
     EXPECT_FALSE(v.HoldsAlternative<bool>());
     EXPECT_FALSE(v.HoldsAlternative<char>());
     EXPECT_FALSE(v.HoldsAlternative<double>());
+}
+
+TEST(VariantTest, visit)
+{
+    Variant<int, double> v(5);
+    bool intWasRecognized{false};
+    bool doubleWasRecognized{false};
+
+    Visit([&intWasRecognized, &doubleWasRecognized](auto &&arg)
+          {
+              using T = typename std::decay<decltype(arg)>::type;
+              if (std::is_same<T, int>::value)
+              {
+                  intWasRecognized = true;
+              }
+              else if (std::is_same<T, double>::value)
+              {
+                  doubleWasRecognized = true;
+              }
+          },
+          v);
+
+    EXPECT_TRUE(intWasRecognized);
+    EXPECT_FALSE(doubleWasRecognized);
 }
